@@ -1,6 +1,8 @@
 module Feature.OrderedGraph {
     declare var d3;
     declare var _;
+    declare var console;
+
     export class OrderedGraphWidget {
         private _svg;
         private _nodes;
@@ -17,13 +19,18 @@ module Feature.OrderedGraph {
         }
 
         private generateRandomNodes() {
-            return _.range(100).map((i) => {return {name : 'Test' + i, test : 'Name' + i}});
+            var criteria = ['one', 'two', 'three'];
+            return _.range(this._numberOfNodes).map((i) => {
+                return {
+                    name: 'Test' + i, test: 'Name' + i, criterion: _.sample(criteria)
+                };
+            });
         }
 
         private generateRandomLinks(nodes) {
             var indexes = _.range(nodes.length);
             return _.range(nodes.length / 1.5).map(() => {
-                return {source : _.sample(indexes), target : _.sample(indexes)}
+                return { source: _.sample(indexes), target: _.sample(indexes) };
             });
         }
 
@@ -48,7 +55,9 @@ module Feature.OrderedGraph {
         }
 
         private bindForceTick(force, nodesAndLinks) {
-            force.on("tick", () => this.tick(nodesAndLinks.links, nodesAndLinks.nodes));
+            var links = nodesAndLinks.links;
+            var nodes = nodesAndLinks.nodes;
+            force.on("tick", () => this.tick(links, nodes));
         }
 
         private initSvg() {
@@ -72,13 +81,31 @@ module Feature.OrderedGraph {
         }
 
         private tick(links, nodes) {
-            links.attr("x1", function(d) { return d.source.x; })
-                .attr("y1", function(d) { return d.source.y; })
-                .attr("x2", function(d) { return d.target.x; })
-                .attr("y2", function(d) { return d.target.y; });
+            links.attr("x1", (d) => d.source.x)
+                .attr("y1", (d) => d.source.y)
+                .attr("x2", (d) => d.target.x)
+                .attr("y2", (d) => d.target.y);
 
-            nodes.attr("cx", function(d) { return d.x; })
-                .attr("cy", function(d) { return d.y; });
+            nodes.attr("cx", (d) => d.x)
+                .attr("cy", (d) => d.y);
+        }
+
+        groupBy(criterionName: string) {
+            console.log(criterionName);
+        }
+
+        private _devider;
+        private groupDevider() {
+            if (!this._devider) {
+                this._devider = new Feature.OrderedGraph.CirclesGroupDevider();
+            }
+            return this._devider;
+        }
+        setGroupDevider(devider) {
+            if (this._devider) {
+                throw '`devider` already set'; 
+            }
+            this._devider = devider;
         }
 
         private _width : number = 600;
@@ -97,6 +124,15 @@ module Feature.OrderedGraph {
         }
         getHeight() : number {
             return this._width;
+        }
+
+        private _numberOfNodes: number = 100;
+        setNodesCount(count : number) {
+            this._numberOfNodes = count;
+            return this;
+        }
+        getNodesCount() : number {
+            return this._numberOfNodes;
         }
     }
 }
