@@ -2,7 +2,7 @@
 
 var graphWidget = new Feature.OrderedGraph.OrderedGraphWidget();
 graphWidget
-    .setWidth(800)
-    .setHeight(600)
-    .setNodesCount(500)
+    .setWidth(900)
+    .setHeight(700)
+    .setNodesCount(200)
     .init(); 

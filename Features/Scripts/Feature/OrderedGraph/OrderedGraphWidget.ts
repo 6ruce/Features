@@ -1,7 +1,8 @@
+/// <reference path="CirclesGroupDevider.ts" />
+
 module Feature.OrderedGraph {
     declare var d3;
     declare var _;
-    declare var console;
 
     export class OrderedGraphWidget {
         private _svg;
@@ -91,13 +92,13 @@ module Feature.OrderedGraph {
         }
 
         groupBy(criterionName: string) {
-            console.log(criterionName);
+            this.groupDevider().group(this._svg.selectAll("circle"), this._svg.selectAll("line"), criterionName);
         }
 
         private _devider;
         private groupDevider() {
             if (!this._devider) {
-                this._devider = new Feature.OrderedGraph.CirclesGroupDevider();
+                this._devider = new Feature.OrderedGraph.CirclesGroupDevider(this._width, this._height);
             }
             return this._devider;
         }
