@@ -8,15 +8,16 @@ module Feature.OrderedGraph {
         private _svg;
         private _nodes;
         private _links;
+        private _force;
 
         init() {
             this._svg = this.initSvg();
             this._nodes = this.generateRandomNodes();
             this._links = this.generateRandomLinks(this._nodes);
 
-            var force = this.createForce(this._nodes, this._links);
+            this._force = this.createForce(this._nodes, this._links);
             var nodesAndLinks = this.drawElements(this._svg);
-            this.bindForceTick(force, nodesAndLinks);
+            this.bindForceTick(this._force, nodesAndLinks);
         }
 
         private generateRandomNodes() {
@@ -49,7 +50,7 @@ module Feature.OrderedGraph {
                 .data(this._nodes)
                 .enter()
                 .append("circle")
-                .attr("r", 10)
+                .attr("r", 5)
                 .style("fill", (d, i) => colors(i));
 
             return {links : links, nodes : nodes};
@@ -92,7 +93,10 @@ module Feature.OrderedGraph {
         }
 
         groupBy(criterionName: string) {
-            this.groupDevider().group(this._svg.selectAll("circle"), this._svg.selectAll("line"), criterionName);
+            this._force.stop();
+            var nodes = this._svg.selectAll("circle");
+            var links = this._svg.selectAll("line");
+            this.groupDevider().group(nodes, links, criterionName);
         }
 
         private _devider;
