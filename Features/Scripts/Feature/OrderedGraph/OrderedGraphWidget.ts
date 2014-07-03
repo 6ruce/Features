@@ -4,16 +4,19 @@ module Feature.OrderedGraph {
     declare var d3;
     declare var _;
 
+    //TODO: Make uniq ids for links
     export class OrderedGraphWidget {
         private _svg;
         private _nodes;
         private _links;
+        private _nodeLinksMap;
         private _force;
 
         init() {
             this._svg = this.initSvg();
             this._nodes = this.generateRandomNodes();
             this._links = this.generateRandomLinks(this._nodes);
+            this._nodeLinksMap = this.makeNodeLinksMap(this._nodes, this._links);
 
             this._force = this.createForce(this._nodes, this._links);
             var nodesAndLinks = this.drawElements(this._svg);
@@ -31,9 +34,30 @@ module Feature.OrderedGraph {
 
         private generateRandomLinks(nodes) {
             var indexes = _.range(nodes.length);
-            return _.range(nodes.length / 1.5).map(() => {
-                return { source: _.sample(indexes), target: _.sample(indexes) };
+            return _.range(nodes.length / 1.5).map((i) => {
+                return { source: _.sample(indexes), target: _.sample(indexes), id : i };
             });
+        }
+
+        private makeNodeLinksMap(nodes, links) {
+            var map = [];
+            for (var index in links) {
+                var link = links[index];
+                map[link.source] = map[link.source] || {};
+                if (! map[link.source]['source']) {
+                    map[link.source]['source'] = [link.id];
+                } else {
+                    map[link.source]['source'].push(link.id);
+                }
+
+                map[link.target] = map[link.target] || {};
+                if (!map[link.target]['target']) {
+                    map[link.target]['target'] = [link.id];
+                } else {
+                    map[link.target]['target'].push(link.id);
+                }
+            }
+            return map;
         }
 
         private drawElements(svg) {
@@ -43,6 +67,7 @@ module Feature.OrderedGraph {
                 .data(this._links)
                 .enter()
                 .append("line")
+                .attr("id", (d, i) => "graph-link-" + d.id)
                 .style("stroke", "#ccc")
                 .style("stroke-width", 1);
 
@@ -96,7 +121,7 @@ module Feature.OrderedGraph {
             this._force.stop();
             var nodes = this._svg.selectAll("circle");
             var links = this._svg.selectAll("line");
-            this.groupDevider().group(nodes, links, criterionName);
+            this.groupDevider().group(nodes, links, this._nodeLinksMap, criterionName);
         }
 
         private _devider;

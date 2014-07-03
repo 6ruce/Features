@@ -10,23 +10,67 @@
 
         constructor(private viewportWidth: number, private viewportHeight: number) {}
 
-        group(nodes, links,criterion: string) {
+        group(nodes, links, nodeLinksMap, criterion: string) {
             var _this = this;
             var maxRadius = _.min([this.viewportWidth, this.viewportHeight]) / 2 - this.bordersSeparator;
             var circlesRadiuses = this.calculateRadiuses(nodes, maxRadius, criterion);
-            console.log(circlesRadiuses);
             nodes.each(function (node) {
                 var coordinates = _this.generateCoordinates(circlesRadiuses, node[criterion]);
+                console.log('node.x: ' + (coordinates.x + _this.viewportWidth / 2));
                 d3.select(this)
                     .transition()
-                    .attr('cx', (d)=> coordinates.x + maxRadius)
-                    .attr('cy', (d)=> coordinates.y + maxRadius);
+                    .attr('cx', (d) => coordinates.x + _this.viewportWidth / 2)
+                    .attr('cy', (d) => coordinates.y + _this.viewportHeight / 2);
+
+                /*if (nodeLinksMap[node.index]) {
+                    console.log('sources:');
+                    if (nodeLinksMap[node.index].source) {
+                        for (var index1 in nodeLinksMap[node.index].source) {
+                            var id1 = nodeLinksMap[node.index].source[index1];
+                            d3.select('#graph-link-' + id1)
+                                .transition()
+                                .attr('x1', (d) => {
+                                    return coordinates.x + (_this.viewportWidth / 2);
+                                })
+                                .attr('y1', (d) => coordinates.y + (_this.viewportHeight / 2));
+                        }
+                    }
+                    console.log('targets:');
+                    if (nodeLinksMap[node.index].target) {
+                        for (var index2 in nodeLinksMap[node.index].target) {
+                            var id2 = nodeLinksMap[node.index].target[index2];
+                            d3.select('#graph-link-' + id2)
+                                .transition()
+                                .attr('x2', (d) => {
+                                    console.log(d); return coordinates.x + _this.viewportWidth / 2; })
+                                .attr('y2', (d) => coordinates.y + _this.viewportHeight / 2);
+                        }
+                    }
+                }*/
+                
             });
 
-            /*links.transition().attr('x1', (d) => {
-                return 0;
+            /*links.each(function (link) {
+                console.log(link);
+                var coordinates1 = _this.generateCoordinates(circlesRadiuses, link.source[criterion]);
+                var coordinates2 = _this.generateCoordinates(circlesRadiuses, link.target[criterion]);
+                d3.select(this)
+                    .transition()
+                    .attr('x1', (d) => coordinates1.x + _this.viewportWidth / 2)
+                    .attr('y1', (d) => coordinates1.y + _this.viewportHeight / 2)
+                    .attr('x2', (d) => coordinates2.x + _this.viewportWidth / 2)
+                    .attr('y2', (d) => coordinates2.y + _this.viewportHeight / 2);
+
+                d3.select('#graph-node-' + link.source.index)
+                    .transition()
+                    .attr('cx', (d) => coordinates1.x + _this.viewportWidth / 2)
+                    .attr('cy', (d) => coordinates1.y + _this.viewportHeight / 2);
+
+                d3.select('#graph-node-' + link.target.index)
+                    .transition()
+                    .attr('cx', (d) => coordinates2.x + _this.viewportWidth / 2)
+                    .attr('cy', (d) => coordinates2.y + _this.viewportHeight / 2);
             });*/
-            
         }
 
         private generateCoordinates(circlesRadiuses, criterionValue) {
