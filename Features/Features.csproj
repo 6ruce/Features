@@ -106,7 +106,8 @@
     <Content Include="Content\index.html" />
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
-    <Content Include="Scripts\Feature\OrderedGraph\CirclesGroupDevider.ts" />
+    <Content Include="Scripts\Feature\OrderedGraph\EllipsesParametersCalculator.ts" />
+    <Content Include="Scripts\Feature\OrderedGraph\EllipseWagesGroupDevider.ts" />
     <Content Include="Scripts\Feature\OrderedGraph\OrderedGraphWidget.ts" />
     <Content Include="Scripts\main.ts" />
     <Content Include="Web.config" />

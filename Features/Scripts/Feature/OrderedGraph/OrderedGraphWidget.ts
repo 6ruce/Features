@@ -1,4 +1,4 @@
-/// <reference path="CirclesGroupDevider.ts" />
+/// <reference path="EllipseWagesGroupDevider.ts" />
 
 module Feature.OrderedGraph {
     declare var d3;
@@ -24,7 +24,7 @@ module Feature.OrderedGraph {
         }
 
         private generateRandomNodes() {
-            var criteria = ['one', 'two', 'three'];
+            var criteria = _.range(10);
             return _.range(this._numberOfNodes).map((i) => {
                 return {
                     name: 'Test' + i, test: 'Name' + i, criterion: _.sample(criteria)
@@ -117,17 +117,17 @@ module Feature.OrderedGraph {
                 .attr("cy", (d) => d.y);
         }
 
-        groupBy(criterionName: string) {
+        group() {
             this._force.stop();
             var nodes = this._svg.selectAll("circle");
             var links = this._svg.selectAll("line");
-            this.groupDevider().group(nodes, links, this._nodeLinksMap, criterionName);
+            this.groupDevider().group(nodes, links, this._nodeLinksMap);
         }
 
         private _devider;
         private groupDevider() {
             if (!this._devider) {
-                this._devider = new Feature.OrderedGraph.CirclesGroupDevider(this._width, this._height);
+                this._devider = new EllipseWagesGroupDevider(this._width, this._height);
             }
             return this._devider;
         }

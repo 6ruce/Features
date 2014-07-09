@@ -4,5 +4,5 @@ var graphWidget = new Feature.OrderedGraph.OrderedGraphWidget();
 graphWidget
     .setWidth(900)
     .setHeight(700)
-    .setNodesCount(200)
+    .setNodesCount(300)
     .init(); 
