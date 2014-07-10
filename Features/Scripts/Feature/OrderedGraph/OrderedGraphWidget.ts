@@ -27,7 +27,7 @@ module Feature.OrderedGraph {
             var criteria = _.range(10);
             return _.range(this._numberOfNodes).map((i) => {
                 return {
-                    name: 'Test' + i, test: 'Name' + i, criterion: _.sample(criteria)
+                    name: 'Test' + i, test: 'Name' + i, criterion: _.sample(criteria), r : _.random(3, 9)
                 };
             });
         }
@@ -75,7 +75,7 @@ module Feature.OrderedGraph {
                 .data(this._nodes)
                 .enter()
                 .append("circle")
-                .attr("r", 5)
+                .attr("r", d => d.r)
                 .style("fill", (d, i) => colors(i));
 
             return {links : links, nodes : nodes};

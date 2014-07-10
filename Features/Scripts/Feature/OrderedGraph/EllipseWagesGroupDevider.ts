@@ -5,30 +5,31 @@ module Feature.OrderedGraph {
     declare var d3;
 
     export class EllipseWagesGroupDevider {
-        private bordersSeparator = 10;
-        private separationSectionWidth = 80;
+        private _bordersSeparator = 10;
+        private _separationSectionWidth = 80;
+        private animationDuration = 1;//seconds
 
         constructor(private viewportWidth: number, private viewportHeight: number) {}
 
         group(nodes, links, nodeLinksMap) {
             var _this = this;
-            var maxRadius = _.min([this.viewportWidth, this.viewportHeight]) / 2 - this.bordersSeparator;
+            var maxRadius = _.min([this.viewportWidth, this.viewportHeight]) / 2 - this._bordersSeparator;
             var parameters = this.calculateEllipsesParameters(nodes, maxRadius);
             nodes.each(function (node) {
                 var coordinates = _this.generateCoordinates(parameters, node);
                 d3.select(this)
                     .transition()
                     .attr('cx', d => coordinates.x + _this.viewportWidth / 2)
-                    .attr('cy', d => coordinates.y + _this.viewportHeight / 2);
+                    .attr('cy', d => coordinates.y + _this.viewportHeight / 2)
+                    .duration(800);
             });
         }
 
         private generateCoordinates(ellipsesParameters, node) {
-            var angle = _.random(2 * Math.PI * 1000) / 1000;
-            var radiuses = this.calculateEllipsesRadiuses(ellipsesParameters[node.$$ellipse], angle);
+            var radiuses = this.calculateEllipsesRadiuses(ellipsesParameters[node.$$ellipse], node.$$angle);
             var radius = _.random(radiuses.inner, radiuses.outer);
 
-            return {x: radius * Math.cos(angle), y: radius * Math.sin(angle)};
+            return { x: radius * Math.cos(node.$$angle), y: radius * Math.sin(node.$$angle) };
         }
 
         private calculateEllipsesRadiuses(ellipsesParameters, angle) {
@@ -51,16 +52,16 @@ module Feature.OrderedGraph {
         private calculateEllipsesParameters(domNodes, maxRadius) {
             var nodes = _(domNodes[0]).filter(node => !_.isUndefined(node.__data__)).map(node => node.__data__);
 
-            var parametersCalculator = this.getEllipsesParametersCalculator();
-            parametersCalculator.setEllipseOrbitForEachNode(nodes);
+            var parametersCalculator = this.getEllipsesParametersCalculator(nodes);
+            parametersCalculator.setPositionOnEllipseForEachNode();
             
-            return parametersCalculator.calculate(nodes, maxRadius);
+            return parametersCalculator.calculate(maxRadius);
         }
 
         private _parametersCalculator;
-        private getEllipsesParametersCalculator() {
+        private getEllipsesParametersCalculator(nodes) {
             if (! this._parametersCalculator) {
-                this._parametersCalculator = new EllipsesParametersCalculator();
+                this._parametersCalculator = new EllipsesParametersCalculator(nodes);
             }
             return this._parametersCalculator;
         }

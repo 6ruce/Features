@@ -12,24 +12,43 @@
         private flattenedKoef = 0.4;
         private nodesFillmentKoef = 0.6;
 
-        private nodeCircleRadius = 5;
-        private nodeCircleSquare = Math.PI * Math.pow(this.nodeCircleRadius, 2);
+        private orbitAngleDevider = [];
+        private nodesOnOrbitArea = [];
+        private nodesOnOrbit = [];
+        private wageDevider;
 
-        public calculate(nodes, maxRadius) {
+        constructor(private nodes) {
+            var maxWage = _.max(this.nodes, node => node[this.wagesFieldName])[this.wagesFieldName];
+            this.wageDevider = maxWage / 3;
+            this.calculateDataForEachEllipseOrbit();
+            _.each([this.centralEllipseIndex, this.middleEllipseIndex, this.outerEllipseIndex], index => {
+                this.orbitAngleDevider[index] = (2 * Math.PI) / this.nodesOnOrbit[index];
+            });
+        }
+
+        public calculate(maxRadius) {
             var parameters = [];
-            var maxWage = _.max(nodes, node => node[this.wagesFieldName])[this.wagesFieldName];
-            var wageDevider = maxWage / 3;
-            var nodesOnOrbits = this.countNodesOnEachEllipseOrbit(nodes, wageDevider);
-
-            parameters[this.centralEllipseIndex] = this.calculateCentralEllipseParams(nodesOnOrbits);
-            parameters[this.middleEllipseIndex] = this.calculateMiddleEllipseParams(nodesOnOrbits, maxRadius);
-            parameters[this.outerEllipseIndex] = this.calculateOuterEllipseParams(nodesOnOrbits, maxRadius);
+            
+            parameters[this.centralEllipseIndex] = this.calculateCentralEllipseParams();
+            parameters[this.middleEllipseIndex] = this.calculateMiddleEllipseParams(maxRadius);
+            parameters[this.outerEllipseIndex] = this.calculateOuterEllipseParams(maxRadius);
 
             return parameters;
         }
 
-        private calculateCentralEllipseParams(nodesOnOrbits) {
-            var totalNodesOnOrbitArea = nodesOnOrbits[this.centralEllipseIndex] * this.nodeCircleSquare;
+        private calculateDataForEachEllipseOrbit() {
+            this.nodesOnOrbitArea[this.centralEllipseIndex] = this.nodesOnOrbit[this.centralEllipseIndex] = 0;
+            this.nodesOnOrbitArea[this.middleEllipseIndex] = this.nodesOnOrbit[this.middleEllipseIndex] = 0;
+            this.nodesOnOrbitArea[this.outerEllipseIndex] = this.nodesOnOrbit[this.outerEllipseIndex] = 0;
+            _.each(this.nodes, node => {
+                var orbit = this.determineEllipseOrbit(node);
+                this.nodesOnOrbit[orbit]++;
+                this.nodesOnOrbitArea[orbit] += this.circleArea(node.r);
+            });
+        }
+
+        private calculateCentralEllipseParams() {
+            var totalNodesOnOrbitArea = this.nodesOnOrbitArea[this.centralEllipseIndex];
             var a = Math.sqrt(totalNodesOnOrbitArea * this.nodesFillmentKoef / (Math.PI * this.flattenedKoef));
             return {
                 inner: { a: 0, b: 0 },
@@ -37,10 +56,10 @@
             };
         }
 
-        private calculateMiddleEllipseParams(nodesOnOrbits, maxRadius) {
+        private calculateMiddleEllipseParams(maxRadius) {
             var outerRadius = maxRadius - this.middleEllipseSeparator;
             var outerEllipseArea = Math.PI * Math.pow(outerRadius, 2) * this.flattenedKoef;
-            var totalNodesOnOrbitArea = nodesOnOrbits[this.middleEllipseIndex] * this.nodeCircleSquare;
+            var totalNodesOnOrbitArea = this.nodesOnOrbitArea[this.middleEllipseIndex];
             var a = Math.sqrt((outerEllipseArea - totalNodesOnOrbitArea * this.nodesFillmentKoef) / (Math.PI * this.flattenedKoef));
             return {
                 inner: this.createParamsFromA(a),
@@ -48,9 +67,9 @@
             };
         }
 
-        private calculateOuterEllipseParams(nodesOnOrbits, maxRadius) {
+        private calculateOuterEllipseParams(maxRadius) {
             var outerEllipseArea = Math.PI * Math.pow(maxRadius, 2) * this.flattenedKoef;
-            var totalNodesOnOrbitArea = nodesOnOrbits[this.outerEllipseIndex] * this.nodeCircleSquare;
+            var totalNodesOnOrbitArea = this.nodesOnOrbitArea[this.outerEllipseIndex];
             var a = Math.sqrt((outerEllipseArea - totalNodesOnOrbitArea * this.nodesFillmentKoef) / (Math.PI * this.flattenedKoef));
             return {
                 inner: this.createParamsFromA(a),
@@ -62,18 +81,21 @@
             return { a: a, b: a * this.flattenedKoef };
         }
 
-        private countNodesOnEachEllipseOrbit(nodes, wageDevider) {
-            return _.countBy(nodes, node => this.determineEllipseOrbit(node, wageDevider));
+        private circleArea(radius) {
+            return Math.PI * Math.pow(radius, 2);
         }
 
-        public setEllipseOrbitForEachNode(nodes) {
-            //TODO: Manage something with `wageDevider` code duplication
-            var maxWage = _.max(nodes, node => node[this.wagesFieldName])[this.wagesFieldName];
-            var wageDevider = maxWage / 3;
-            _.each(nodes, node => node.$$ellipse = this.determineEllipseOrbit(node, wageDevider));
+        public setPositionOnEllipseForEachNode() {
+            var nodeOnOrbit = [];
+            nodeOnOrbit[this.centralEllipseIndex] = nodeOnOrbit[this.middleEllipseIndex] = nodeOnOrbit[this.outerEllipseIndex] = -1;
+            _.each(this.nodes, node => {
+                node.$$ellipse = this.determineEllipseOrbit(node);
+                node.$$angle = this.orbitAngleDevider[node.$$ellipse] * ++nodeOnOrbit[node.$$ellipse];
+            });
         }
 
-        private determineEllipseOrbit(node, wageDevider) {
+        private determineEllipseOrbit(node) {
+            var wageDevider = this.wageDevider;
             var nodeWage = node[this.wagesFieldName];
             if (nodeWage <= wageDevider * 0.3) return this.centralEllipseIndex;
             if (nodeWage > wageDevider * 0.3 && nodeWage <= 2.7 * wageDevider) return this.middleEllipseIndex;
